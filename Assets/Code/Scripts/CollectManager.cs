@@ -15,6 +15,8 @@ public class CollectManager : MonoBehaviour
     private Transform selectedAreaSlotTransform;
     private CollectableMovement selectedCollectableObject;
 
+    private float offsetZ;
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("CollectArea"))
@@ -55,7 +57,7 @@ public class CollectManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(0.075f);
+            yield return new WaitForSeconds(0.1f);
 
             // collect area existence check
             for (int i = collectAreaParent.childCount - 1; i > 0; i--)
@@ -83,11 +85,9 @@ public class CollectManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(0.075f);
+            yield return new WaitForSeconds(0.1f);
         }
     }
-
-
 }
 
 //IEnumerator CollectRoutine()

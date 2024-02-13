@@ -7,7 +7,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Assignments")]
     Rigidbody rb;
-    Animator animator;
+    public Animator animator;
     [SerializeField] private Joystick joystick;
 
     [Header("Stats")]

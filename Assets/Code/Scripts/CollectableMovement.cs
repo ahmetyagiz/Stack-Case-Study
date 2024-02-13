@@ -1,11 +1,9 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CollectableMovement : MonoBehaviour
 {
-    private bool isMoving;
+    private bool isFollowing;
     private bool isLooking;
     private GameObject player;
     public Transform selectedTransform;
@@ -27,16 +25,17 @@ public class CollectableMovement : MonoBehaviour
         // ziplama ve bitince takibe basliyor
         transform.DOJump(selectedTransform.transform.position, 1, 1, 0.15f).OnComplete(() =>
         {
-            isMoving = true;
+            isFollowing = true;
         });
     }
 
     void FollowToSelectedTransform()
     {
-        if (isMoving)
+        if (isFollowing)
         {
             // move
-            transform.position = Vector3.Lerp(transform.position, selectedTransform.transform.position, Time.deltaTime * 10);
+            selectedTransform.transform.position = new Vector3(selectedTransform.position.x, selectedTransform.position.y, selectedTransform.position.z);
+            transform.position = Vector3.Lerp(transform.position, selectedTransform.transform.position, Time.deltaTime * 30);
         }
     }
 
@@ -48,7 +47,7 @@ public class CollectableMovement : MonoBehaviour
             transform.LookAt(new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z));
         }
     }
-    
+
     //void CollectedObjectToPlayer() // dalga hareketi vs.
     //{
     //    Interpolate between the previous position and the target position
