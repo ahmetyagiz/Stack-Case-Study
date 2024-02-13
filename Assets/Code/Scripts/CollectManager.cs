@@ -5,7 +5,8 @@ using DG.Tweening;
 
 public class CollectManager : MonoBehaviour
 {
-    [SerializeField] private bool inArea;
+    [SerializeField] private bool inCollectArea;
+    [SerializeField] private bool inGiveArea;
     [SerializeField] private Transform collectedObjectsParent;
     [SerializeField] private List<Transform> backpackTransforms = new List<Transform>();
 
@@ -37,13 +38,13 @@ public class CollectManager : MonoBehaviour
         if (other.CompareTag("CollectArea"))
         {
             StopCoroutine(CollectRoutine(other.transform));
-            inArea = false;
+            inCollectArea = false;
         }
 
         if (other.CompareTag("GiveArea"))
         {
             StartCoroutine(GiveRoutine(other.transform));
-            inArea = false;
+            inGiveArea = false;
         }
     }
 
@@ -52,12 +53,12 @@ public class CollectManager : MonoBehaviour
     #region Collect Object
     IEnumerator CollectRoutine(Transform collectAreaParent)
     {
-        inArea = true;
+        inCollectArea = true;
 
         while (true)
         {
             // if leave collect area "OR" if backpack full, break
-            if (inArea == false || backpackTransforms[backpackTransforms.Count - 1].GetComponent<SlotChecker>().isSlotFull == true)
+            if (inCollectArea == false || backpackTransforms[backpackTransforms.Count - 1].GetComponent<SlotChecker>().isSlotFull == true)
             {
                 break;
             }
@@ -68,15 +69,13 @@ public class CollectManager : MonoBehaviour
                 if (backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull == false)
                 {
                     selectedBackpackTransform = backpackTransforms[i];
-                    selectedBackpackTransform.GetComponent<SlotChecker>().isSlotFull = true;
+                    
                     break;
                 }
             }
 
-            yield return new WaitForSeconds(0.1f);
-
             // collect area existence check
-            for (int i = collectAreaParent.childCount - 1; i > 0; i--)
+            for (int i = collectAreaParent.childCount - 1; i >= 0; i--)
             {
                 if (collectAreaParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull == true)
                 {
@@ -85,7 +84,7 @@ public class CollectManager : MonoBehaviour
                     // slot's object
                     selectedCollectableObject = collectAreaParent.GetChild(i).GetChild(0).GetComponent<CollectableMovement>();
 
-                    // clean slot
+                    // clean collect area slot
                     selectedAreaSlotTransform.GetComponent<SlotChecker>().isSlotFull = false;
 
                     // assign backpack transform
@@ -96,12 +95,13 @@ public class CollectManager : MonoBehaviour
 
                     // example: brick move
                     selectedCollectableObject.JumpToSelectedTransform();
+                    selectedBackpackTransform.GetComponent<SlotChecker>().isSlotFull = true;
 
                     break;
                 }
             }
 
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.01f);
         }
     }
 
@@ -111,12 +111,12 @@ public class CollectManager : MonoBehaviour
 
     IEnumerator GiveRoutine(Transform giveAreaParent)
     {
-        inArea = true;
+        inGiveArea = true;
 
         while (true)
         {
             // if leave give area "OR" if backpack empty "OR" if give area full, break
-            if (inArea == false || collectedObjectsParent.childCount == 0 || giveAreaParent.GetChild(giveAreaParent.childCount-1).GetComponent<SlotChecker>().isSlotFull == true)
+            if (inGiveArea == false || collectedObjectsParent.childCount == 0 || giveAreaParent.GetChild(giveAreaParent.childCount-1).GetComponent<SlotChecker>().isSlotFull == true)
             {
                 break;
             }
@@ -135,24 +135,24 @@ public class CollectManager : MonoBehaviour
 
             for (int i = collectedObjectsParent.childCount - 1; i >= 0; i--)
             {
-                // clean backpack slot
                 backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull = false;
-
                 selectedGiveObject = collectedObjectsParent.GetChild(i);
                 Destroy(selectedGiveObject.GetComponent<CollectableMovement>());
-
-                selectedGiveObject.SetParent(null);
 
                 selectedGiveObject.DORotateQuaternion(Quaternion.identity, 0.5f);
                 selectedGiveObject.DOJump(selectedGiveAreaSlot.position, 1, 1, 0.5f).OnComplete(() =>
                 {
                     selectedGiveObject.SetPositionAndRotation(selectedGiveAreaSlot.position, Quaternion.identity);
                 });
-                yield return new WaitForSeconds(0.2f);
+
+                // clean backpack slot
+                //collectedObjectsParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull = false;
+                selectedGiveObject.SetParent(null);
+
                 break;
             }
 
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForSeconds(0.1f);
         }
     }
 

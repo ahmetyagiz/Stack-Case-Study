@@ -23,7 +23,7 @@ public class CollectableMovement : MonoBehaviour
         isLooking = true;
 
         // ziplama ve bitince takibe basliyor
-        transform.DOJump(selectedTransform.transform.position, 1, 1, 0.15f).OnComplete(() =>
+        transform.DOJump(selectedTransform.transform.position, 1, 1, 0.4f).OnComplete(() =>
         {
             isFollowing = true;
         });
@@ -47,20 +47,4 @@ public class CollectableMovement : MonoBehaviour
             transform.LookAt(new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z));
         }
     }
-
-    //void CollectedObjectToPlayer() // dalga hareketi vs.
-    //{
-    //    Interpolate between the previous position and the target position
-    //   Vector3 newPosition = Vector3.Lerp(transform.position, previousPosition, Time.deltaTime * mySpeed);
-
-    //    Update the position of the object
-    //    transform.position = newPosition;
-
-    //    Store the current position as the previous position for the next frame
-
-    //   previousPosition = transform.position;
-
-    //    Look at the player
-    //    transform.LookAt(new Vector3(player.transform.position.x, transform.position.y, player.transform.position.z));
-    //}
 }
