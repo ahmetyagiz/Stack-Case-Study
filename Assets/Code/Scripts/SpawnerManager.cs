@@ -7,9 +7,8 @@ public class SpawnerManager : MonoBehaviour
 {
     [SerializeField] private GameObject referenceObj;
     [SerializeField] private Transform slotParent;
-    public int counter;
-
-    SlotChecker selectedSlotChecker;
+    private int counter;
+    private SlotChecker selectedSlotChecker;
 
     void Start()
     {

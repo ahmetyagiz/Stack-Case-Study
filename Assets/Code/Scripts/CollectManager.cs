@@ -2,12 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
-using Unity.VisualScripting;
 
 public class CollectManager : MonoBehaviour
 {
     [SerializeField] private bool inArea;
-
+    [SerializeField] private Transform collectedObjectsParent;
     [SerializeField] private List<Transform> backpackTransforms = new List<Transform>();
 
     [Header("Collected Object")]
@@ -15,13 +14,21 @@ public class CollectManager : MonoBehaviour
     private Transform selectedAreaSlotTransform;
     private CollectableMovement selectedCollectableObject;
 
-    private float offsetZ;
+    // Giving
+    private Transform selectedGiveObject;
+    private Transform selectedGiveAreaSlot;
 
+    #region OnTriggerEnter OnTriggerExit
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("CollectArea"))
         {
             StartCoroutine(CollectRoutine(other.transform));
+        }
+
+        if (other.CompareTag("GiveArea"))
+        {
+            StartCoroutine(GiveRoutine(other.transform));
         }
     }
 
@@ -32,15 +39,24 @@ public class CollectManager : MonoBehaviour
             StopCoroutine(CollectRoutine(other.transform));
             inArea = false;
         }
+
+        if (other.CompareTag("GiveArea"))
+        {
+            StartCoroutine(GiveRoutine(other.transform));
+            inArea = false;
+        }
     }
 
+    #endregion
+
+    #region Collect Object
     IEnumerator CollectRoutine(Transform collectAreaParent)
     {
         inArea = true;
 
         while (true)
         {
-            // collect area leave check "OR" is backpack full, break
+            // if leave collect area "OR" if backpack full, break
             if (inArea == false || backpackTransforms[backpackTransforms.Count - 1].GetComponent<SlotChecker>().isSlotFull == true)
             {
                 break;
@@ -52,7 +68,7 @@ public class CollectManager : MonoBehaviour
                 if (backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull == false)
                 {
                     selectedBackpackTransform = backpackTransforms[i];
-                    backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull = true;
+                    selectedBackpackTransform.GetComponent<SlotChecker>().isSlotFull = true;
                     break;
                 }
             }
@@ -69,14 +85,14 @@ public class CollectManager : MonoBehaviour
                     // slot's object
                     selectedCollectableObject = collectAreaParent.GetChild(i).GetChild(0).GetComponent<CollectableMovement>();
 
-                    // clean slot 
+                    // clean slot
                     selectedAreaSlotTransform.GetComponent<SlotChecker>().isSlotFull = false;
 
                     // assign backpack transform
                     selectedCollectableObject.selectedTransform = selectedBackpackTransform;
 
-                    // leave the slot
-                    selectedCollectableObject.transform.parent = null;
+                    // set new parent
+                    selectedCollectableObject.transform.SetParent(collectedObjectsParent);
 
                     // example: brick move
                     selectedCollectableObject.JumpToSelectedTransform();
@@ -88,34 +104,57 @@ public class CollectManager : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
     }
+
+    #endregion
+
+    #region Give Object
+
+    IEnumerator GiveRoutine(Transform giveAreaParent)
+    {
+        inArea = true;
+
+        while (true)
+        {
+            // if leave give area "OR" if backpack empty "OR" if give area full, break
+            if (inArea == false || collectedObjectsParent.childCount == 0 || giveAreaParent.GetChild(giveAreaParent.childCount-1).GetComponent<SlotChecker>().isSlotFull == true)
+            {
+                break;
+            }
+
+            // give slot emptiness check
+            for (int i = 0; i < giveAreaParent.childCount; i++)
+            {
+                if (giveAreaParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull == false)
+                {
+                    selectedGiveAreaSlot = giveAreaParent.transform.GetChild(i);
+                    selectedGiveAreaSlot.GetComponent<SlotChecker>().isSlotFull = true;
+                    
+                    break;
+                }
+            }
+
+            for (int i = collectedObjectsParent.childCount - 1; i >= 0; i--)
+            {
+                // clean backpack slot
+                backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull = false;
+
+                selectedGiveObject = collectedObjectsParent.GetChild(i);
+                Destroy(selectedGiveObject.GetComponent<CollectableMovement>());
+
+                selectedGiveObject.SetParent(null);
+
+                selectedGiveObject.DORotateQuaternion(Quaternion.identity, 0.5f);
+                selectedGiveObject.DOJump(selectedGiveAreaSlot.position, 1, 1, 0.5f).OnComplete(() =>
+                {
+                    selectedGiveObject.SetPositionAndRotation(selectedGiveAreaSlot.position, Quaternion.identity);
+                });
+                yield return new WaitForSeconds(0.2f);
+                break;
+            }
+
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
+    #endregion
 }
-
-//IEnumerator CollectRoutine()
-// {
-//for (int i = 0; i < carryManager.childCount; i++)
-//{
-//    // eðer elim boþsa
-//    if (carryManager.GetChild(i).GetComponent<SlotChecker>().isSlotFull == false)
-//    {
-//        if (inArea == false)
-//        {
-//            break;
-//        }
-//        carryManager.GetChild(i).GetComponent<SlotChecker>().isSlotFull = true;
-//        collectAreaParent.GetChild(i).GetChild(0).GetComponent<CollectableMovement>().isMoving = true;
-
-//        verticalOffset += 0.3f;
-//        collectAreaParent.GetChild(i).GetChild(0).GetComponent<CollectableMovement>().myVerticalOffset = verticalOffset;
-
-//        if (i == 0)
-//        {
-//            continue;
-//        }
-//        collectAreaParent.GetChild(i).GetChild(0).GetComponent<CollectableMovement>().previousPosition = carryManager.GetChild(i - 1).GetChild(0).transform.position;
-
-//        collectAreaParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull = false;
-//        //i = 0;
-//        yield return new WaitForSeconds(0.25f);
-//    }
-//}
-// }
