@@ -23,7 +23,7 @@ public class CollectableMovement : MonoBehaviour
         isLooking = true;
 
         // ziplama ve bitince takibe basliyor
-        transform.DOJump(selectedTransform.transform.position, 1, 1, 0.4f).OnComplete(() =>
+        transform.DOJump(selectedTransform.transform.position, 1, 1, 0.5f).SetEase(Ease.Linear).OnComplete(() =>
         {
             isFollowing = true;
         });

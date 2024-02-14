@@ -6,6 +6,8 @@ TagManager:
   tags:
   - CollectArea
   - GiveArea
+  - Brick
+  - TrashCan
   layers:
   - Default
   - TransparentFX

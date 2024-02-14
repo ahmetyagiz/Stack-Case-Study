@@ -7,6 +7,7 @@ public class CollectManager : MonoBehaviour
 {
     [SerializeField] private bool inCollectArea;
     [SerializeField] private bool inGiveArea;
+    [SerializeField] private bool inTrashArea;
     [SerializeField] private Transform collectedObjectsParent;
     [SerializeField] private List<Transform> backpackTransforms = new List<Transform>();
 
@@ -16,8 +17,6 @@ public class CollectManager : MonoBehaviour
     private CollectableMovement selectedCollectableObject;
 
     // Giving
-    private Transform selectedGiveObject;
-    private Transform selectedGiveAreaSlot;
 
     #region OnTriggerEnter OnTriggerExit
     private void OnTriggerEnter(Collider other)
@@ -31,6 +30,11 @@ public class CollectManager : MonoBehaviour
         {
             StartCoroutine(GiveRoutine(other.transform));
         }
+
+        if (other.CompareTag("TrashCan"))
+        {
+            StartCoroutine(TrashRoutine(other.transform));
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -43,8 +47,14 @@ public class CollectManager : MonoBehaviour
 
         if (other.CompareTag("GiveArea"))
         {
-            StartCoroutine(GiveRoutine(other.transform));
+            StopCoroutine(GiveRoutine(other.transform));
             inGiveArea = false;
+        }
+
+        if (other.CompareTag("TrashCan"))
+        {
+            StopCoroutine(TrashRoutine(other.transform));
+            inTrashArea = false;
         }
     }
 
@@ -101,7 +111,7 @@ public class CollectManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.05f);
         }
     }
 
@@ -112,6 +122,8 @@ public class CollectManager : MonoBehaviour
     IEnumerator GiveRoutine(Transform giveAreaParent)
     {
         inGiveArea = true;
+        Transform selectedGiveObject;
+        Transform selectedGiveAreaSlot = null;
 
         while (true)
         {
@@ -137,6 +149,12 @@ public class CollectManager : MonoBehaviour
             {
                 backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull = false;
                 selectedGiveObject = collectedObjectsParent.GetChild(i);
+
+                if (!selectedGiveObject.CompareTag("Brick"))
+                {
+                    break;
+                }
+
                 Destroy(selectedGiveObject.GetComponent<CollectableMovement>());
 
                 selectedGiveObject.DORotateQuaternion(Quaternion.identity, 0.5f);
@@ -145,14 +163,54 @@ public class CollectManager : MonoBehaviour
                     selectedGiveObject.SetPositionAndRotation(selectedGiveAreaSlot.position, Quaternion.identity);
                 });
 
-                // clean backpack slot
-                //collectedObjectsParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull = false;
-                selectedGiveObject.SetParent(null);
+                selectedGiveObject.SetParent(selectedGiveAreaSlot);
 
                 break;
             }
 
             yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    #endregion
+
+    #region Give Trash Object
+
+    IEnumerator TrashRoutine(Transform giveAreaParent)
+    {
+        inTrashArea = true;
+
+        while (true)
+        {
+            // if leave give area, break
+            if (inTrashArea == false)
+            {
+                break;
+            }
+
+            if (collectedObjectsParent.childCount > 0)
+            {
+                // give slot emptiness check
+                for (int i = collectedObjectsParent.childCount - 1; i >= 0; i--)
+                {
+                    if (backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull == true)
+                    {
+                        backpackTransforms[i].GetComponent<SlotChecker>().isSlotFull = false;
+                        Transform selectedObject = collectedObjectsParent.GetChild(i);
+
+                        Destroy(selectedObject.GetComponent<CollectableMovement>());
+
+                        selectedObject.SetParent(null);
+                        selectedObject.DORotateQuaternion(Quaternion.identity, 0.5f);
+                        selectedObject.DOJump(giveAreaParent.parent.position, 1, 1, 0.4f).SetEase(Ease.Linear).OnComplete(() =>
+                        {
+                            selectedObject.gameObject.SetActive(false);
+                        });
+                        break;
+                    }
+                }
+            }
+            yield return new WaitForSeconds(0.2f);
         }
     }
 
