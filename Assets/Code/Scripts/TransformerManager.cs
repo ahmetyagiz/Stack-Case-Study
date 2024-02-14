@@ -9,7 +9,6 @@ public class TransformerManager : MonoBehaviour
     [SerializeField] private Transform getSlotParent;
     [SerializeField] private Transform spawnSlotParent;
 
-    //public int counter;
     public bool isGettingObjects;
 
     void Update()
@@ -21,7 +20,6 @@ public class TransformerManager : MonoBehaviour
             {
                 if (getSlotParent.GetChild(i).GetComponent<SlotChecker>().isSlotFull == true)
                 {
-                    Debug.Log("Makineye çekebileceðim obje var");
                     StartCoroutine(GetRoutine());
 
                     isGettingObjects = true;
@@ -58,13 +56,12 @@ public class TransformerManager : MonoBehaviour
             // eðer objenin devam eden bir tweeni yoksa
             if (selectedObject != null)
             {
-                Invoke(nameof(SpawnObject), 1f);
-
                 if (DOTween.IsTweening(selectedObject.transform) == false)
                 {
                     selectedSlotChecker.isSlotFull = false;
                     selectedObject.SetParent(null);
                     selectedObject.transform.DOJump(transform.position, 1, 1, 0.25f).SetEase(Ease.Linear);
+                    SpawnObject();
                 }
             }
 

@@ -15,7 +15,7 @@ public class CollectManager : MonoBehaviour
     private Transform selectedBackpackTransform;
     private Transform selectedAreaSlotTransform;
     private CollectableMovement selectedCollectableObject;
-
+    public float almaAraligi;
     // Giving
 
     #region OnTriggerEnter OnTriggerExit
@@ -111,7 +111,7 @@ public class CollectManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(almaAraligi);
         }
     }
 
@@ -201,8 +201,8 @@ public class CollectManager : MonoBehaviour
                         Destroy(selectedObject.GetComponent<CollectableMovement>());
 
                         selectedObject.SetParent(null);
-                        selectedObject.DORotateQuaternion(Quaternion.identity, 0.5f);
-                        selectedObject.DOJump(giveAreaParent.parent.position, 1, 1, 0.4f).SetEase(Ease.Linear).OnComplete(() =>
+                        selectedObject.DORotateQuaternion(Quaternion.identity, 0.3f);
+                        selectedObject.DOJump(giveAreaParent.parent.position, 1, 1, 0.3f).SetEase(Ease.Linear).OnComplete(() =>
                         {
                             selectedObject.gameObject.SetActive(false);
                         });
@@ -210,7 +210,7 @@ public class CollectManager : MonoBehaviour
                     }
                 }
             }
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.15f);
         }
     }
 
